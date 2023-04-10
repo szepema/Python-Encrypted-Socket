@@ -29,23 +29,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
             
             response = ssock.recv(1024).decode()
             
-            cipher = PKCS1_OAEP.new(RSA.import_key(public_key))
-            
             if 'username' in response.lower():
                 
                 username = input(response)
-            
-                encrypted_username = cipher.encrypt(username.encode())
-
-                ssock.send(encrypted_username)
+                
+                ssock.send(username.encode())
                 
             elif 'password' in response.lower():
                 
                 password = input(response)
                 
-                encrypted_password = cipher.encrypt(password.encode())
-                
-                ssock.send(encrypted_password)
+                ssock.send(password.encode())
                 
             else:
                 

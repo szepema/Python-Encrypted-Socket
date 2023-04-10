@@ -1,9 +1,13 @@
 import socket
 import ssl
+# import hashlib
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
+# Storing users
+
+users = {'client1': 'password123', 'client2': 'password456'}
 
 # Generate and import key pair
 
@@ -50,6 +54,34 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
              
              print('Public key sent to client.')
              
+             # Prompt for login credentials
+             
+             print("Waiting for credentials")
+             
+             cipher = PKCS1_OAEP.new(key)
+             
+             ssock.send('Enter your username: '.encode())
+             encrypted_username = ssock.recv(1024)
+             
+             decrypted_username = cipher.decrypt(encrypted_username).decode("utf-8")
+             print(decrypted_username)
+             
+             ssock.send('Please enter your password: '.encode())
+             encrypted_password = ssock.recv(1024)
+                       
+             decrypted_password = cipher.decrypt(encrypted_password).decode("utf-8")
+             print(decrypted_password)
+             
+             
+             # Verify the credentials against the stored values
+             
+             if decrypted_username in users and users[decrypted_username] == decrypted_password:
+                 
+                 ssock.send('Login successful!'.encode())
+                 
+             else:
+                 ssock.send('Error: Incorrect username or password.'.encode())
+             
              
              # Receive encrypted message from client
              
@@ -65,6 +97,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
              decrypted_message = cipher.decrypt(encrypted_message)
              
              print('Decrypted message:', decrypted_message.decode())
+             
+             
+
              
      except BlockingIOError:
          pass  # no client connection yet, keep waiting
