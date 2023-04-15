@@ -1,9 +1,9 @@
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-
 import socket
 import ssl
+import random
 
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
@@ -60,20 +60,44 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
                 print('Incorrect credentials')
 
                 break
+                
+        # Determine fuel type and amount
+             
+        fuel_amount = random.randint(10, 75)
+        
+        fuel_type = random.randint(1, 4)
+        
+        type_dict = {
+            1:"95 Benzin",
+            2:"Diesel",
+            3:"Prémium Benzin",
+            4:"Prémium Diesel",
+        }
+        
+        fuel_type_str = type_dict.get(fuel_type, "Invalid number")
+        
+        print('Tankolásnál összesen {} litert tankoltál.'
+        ' Üzemanyag típusa: {}'.format(fuel_amount, fuel_type_str)) 
+        
+        # Encrypting and sending fueling data
+        
+        amount_bytes = fuel_amount.to_bytes((fuel_amount.bit_length() + 7) // 8, byteorder='big')
+        
+        encrypted_fuel_amount = cipher.encrypt(amount_bytes)  
+        
+        ssock.send(encrypted_fuel_amount)
+        
+        type_bytes = fuel_type.to_bytes((fuel_type.bit_length() + 7) // 8, byteorder='big')  
+       
+        encrypted_fuel_type = cipher.encrypt(type_bytes)  
+        
+        ssock.send(encrypted_fuel_type)  
+        
+        # Receving and decrypting the price
+
+        # fuel_price = ssock.recv(1024)            
+        
+        # print(fuel_price)
         
         
-        # Encrypt message with public key
-        
-        cipher = PKCS1_OAEP.new(RSA.import_key(public_key))
-        
-        message = 'Hello, server!'
-        
-        encrypted_message = cipher.encrypt(message.encode())
-        
-        
-        # Send encrypted message to server
-        
-        ssock.sendall(encrypted_message)
-        
-        print('Encrypted message sent to server.')
-        
+            
