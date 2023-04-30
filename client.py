@@ -100,7 +100,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
                 
                 int_fuel_price = int.from_bytes(bytes_fuel_price, byteorder='big')
                 
-                print('Cost of the fuel:{}'.format(int_fuel_price)) 
+                print('Cost of the fuel: {} Ft'.format(int_fuel_price)) 
                 
                 new_balance = balance - int_fuel_price
                 

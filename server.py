@@ -67,67 +67,72 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
              
              encrypted_password = ssock.recv(1024)
                        
-             decrypted_password = cipher.decrypt(encrypted_password).decode("utf-8") 
-             
-             two_factor = random.randint(1000, 9999)
-             
-             str_two_factor = str(two_factor)
+             decrypted_password = cipher.decrypt(encrypted_password).decode("utf-8")
                 
-             ssock.sendall(('The two-factor verification code is '
-                        + str_two_factor +'Please enter the code:').encode()) 
+             if decrypted_username in users and users[decrypted_username] == decrypted_password:
+             
+                 two_factor = random.randint(1000, 9999)
+             
+                 str_two_factor = str(two_factor)
                 
-             encrypted_verification = ssock.recv(1024)
+                 ssock.sendall(('The two-factor verification code is: '
+                                + str_two_factor +'. Please enter the code:').encode()) 
+                
+                 encrypted_verification = ssock.recv(1024)
                  
-             decrypted_verification = cipher.decrypt(encrypted_verification).decode("utf-8")
+                 decrypted_verification = cipher.decrypt(encrypted_verification).decode("utf-8")
+                 
              
-             
-             # Verify the credentials against the stored values
-             
-             if decrypted_username in users and users[decrypted_username] == decrypted_password and decrypted_verification == str_two_factor:
+                    
+                 if decrypted_verification == str_two_factor: 
+                          
+                        # Verify the credentials against the stored values
+            
+                        ssock.send('Login successful!'.encode())
                  
-                 ssock.send('Login successful!'.encode())
+                        # Recive the fuel data, calculate cost and send it back to client
                  
-                 # Recive the fuel data, calculate cost and send it back to client
+                        encrypted_fuel_amount = ssock.recv(1024)
                  
-                 encrypted_fuel_amount = ssock.recv(1024)
+                        decrypted_amount_bytes = cipher.decrypt(encrypted_fuel_amount)
                  
-                 decrypted_amount_bytes = cipher.decrypt(encrypted_fuel_amount)
+                        decrypted_fuel_amount = int.from_bytes(decrypted_amount_bytes, byteorder='big')
                  
-                 decrypted_fuel_amount = int.from_bytes(decrypted_amount_bytes, byteorder='big')
-                 
-                 encrypted_fuel_type = ssock.recv(1024)
+                        encrypted_fuel_type = ssock.recv(1024)
                             
-                 decrypted_type_bytes = cipher.decrypt(encrypted_fuel_type)
+                        decrypted_type_bytes = cipher.decrypt(encrypted_fuel_type)
                  
-                 decrypted_fuel_type = int.from_bytes(decrypted_type_bytes, byteorder='big')
+                        decrypted_fuel_type = int.from_bytes(decrypted_type_bytes, byteorder='big')
                  
                  
-                 type_dict = {
-                     1:"95 Petrol",
-                     2:"Diesel",
-                     3:"Premium Petrol",
-                     4:"Premium Diesel",
-                 }
+                        type_dict = {
+                            1:"95 Petrol",
+                            2:"Diesel",
+                            3:"Premium Petrol",
+                            4:"Premium Diesel",
+                            }
                  
-                 fuel_type_str = type_dict.get(decrypted_fuel_type, "Invalid number")
+                        fuel_type_str = type_dict.get(decrypted_fuel_type, "Invalid number")
                  
-                 fuel_price = fuel_price[fuel_type_str]
+                        fuel_price = fuel_price[fuel_type_str]
                  
-                 final_price = fuel_price * decrypted_fuel_amount
+                        final_price = fuel_price * decrypted_fuel_amount
                  
-                 print(final_price)
+                        print(final_price)
                  
-                 price_bytes = final_price.to_bytes((final_price.bit_length() + 7) // 8, byteorder='big')
+                        price_bytes = final_price.to_bytes((final_price.bit_length() + 7) // 8, byteorder='big')
                  
-                 ssock.sendall(price_bytes)
+                        ssock.sendall(price_bytes)
                  
+                 
+                 else:
+                 
+                     ssock.send('Error: Incorrect two-factor'.encode())
                  
              else:
                  
                  ssock.send('Error: Incorrect username or password.'.encode())
-                 
-                 break
-                 
+             
 
      except BlockingIOError:
          pass  # no client connection yet, keep waiting
